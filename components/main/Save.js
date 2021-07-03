@@ -30,6 +30,14 @@ export default function Save(props) {
     const _keyboardDidHide = () => setKeyboardVisible(false);
 
     const uploadImage = async () => {
+        Alert.alert(
+            "Info",
+            "uploading",
+            [
+                { text: 'OK' }
+            ],
+            { cancelable: false }
+        );
         const uri = props.route.params.image;
         const childPath = `post/${firebase.auth().currentUser.uid}/${Math.random().toString(36)}`;
         console.log(childPath)
@@ -62,14 +70,7 @@ export default function Save(props) {
     }
 
     const savePostData = (downloadURL) => {
-        Alert.alert(
-            "Info",
-            "uploading",
-            [
-                { text: 'OK' }
-            ],
-            { cancelable: false }
-        );
+
         console.log('props')
         console.log(price)
         console.log(name)
