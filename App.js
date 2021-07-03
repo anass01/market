@@ -6,8 +6,19 @@ import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing'
 import RegisterScreen from './components/auth/Register'
 import LoginScreen from './components/auth/Login'
-import HomeScreen from "./components/main/Home";
+import MainScreen from "./components/Main";
+import AddScreen from "./components/main/Add"
+import SaveScreen from './components/main/Save'
 import * as firebase from 'firebase'
+
+import { Provider } from 'react-redux'
+import { createStore, applyMiddleware } from 'redux'
+import rootReducer from './redux/reducers'
+import thunk from 'redux-thunk'
+const store = createStore(rootReducer, applyMiddleware(thunk))
+
+
+
 import { apiKey,authDomain,projectId,storageBucket,messagingSenderId,appId } from '@env'
 
 import { Avatar, Button, Card, Title, Paragraph } from 'react-native-paper';
@@ -70,13 +81,17 @@ export class App extends Component {
     );
   }
     return (
-        <NavigationContainer >
-          <Stack.Navigator initialRouteName="Home">
-            <Stack.Screen name="Home" component={HomeScreen} />
-          </Stack.Navigator>
-        </NavigationContainer>
+        <Provider store={store}>
+            <StatusBar style="inverted" hidden={false} translucent={false} />
+            <NavigationContainer >
+                <Stack.Navigator initialRouteName="Home">
+                    <Stack.Screen name="Home" component={MainScreen} options={{ headerShown: false }}/>
+                    <Stack.Screen name="Add" component={AddScreen} options={{ headerShown: true }} navigation={this.props.navigation}/>
+                    <Stack.Screen name="Save" component={SaveScreen} navigation={this.props.navigation}/>
+                </Stack.Navigator>
+            </NavigationContainer>
+        </Provider>
     )
-
   }
 }
 

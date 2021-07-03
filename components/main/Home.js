@@ -1,8 +1,9 @@
 import {Alert, FlatList, StyleSheet, Text, View} from "react-native";
-import {Avatar, Button, TextInput} from "react-native-paper";
+import {Avatar, Button, Searchbar, TextInput} from "react-native-paper";
 import React, {Component} from "react";
 import firebase from "firebase";
 import {Item} from "./CardItem";
+
 
 export class Home extends Component {
     constructor(props) {
@@ -32,21 +33,21 @@ export class Home extends Component {
                 },
             ];
         this.renderItem = this.renderItem.bind(this)
-        this.onLogout = this.onLogout.bind(this)
     }
 
     renderItem ({ item }) {
         return(<Item title={item.title} id={item.id} desc={item.desc} pic={item.pic} price={item.price}/>)
     }
-    onLogout(){
-        firebase.auth().signOut();
-    }
+
     render() {
 
         return (
             <View style={{ flex: 1, }}>
-                <View style={{flex: 1 , height:'90%'}}>
+
+                <View style={{flex: 1 , height:'100%' ,}}>
                     <FlatList
+                        style={{ paddingTop: '15%', zIndex:-1}}
+                        contentContainerStyle={{paddingBottom:'15%'}}
                         // columnWrapperStyle={{justifyContent: 'space-between'}}
                         ItemSeparatorComponent={
                             () => <View style={{ width: '100%', backgroundColor: 'pink' }}/>
@@ -56,15 +57,12 @@ export class Home extends Component {
                         keyExtractor={item => item.id}
                     />
                 </View>
-                <View style={{flex:0.1}}>
-                    <Text>User is logged in</Text>
-                    <Button icon="content-save" mode="contained" onPress={this.onLogout}>
-                        logout
-                    </Button>
-                </View>
+                <Searchbar style={{margin:'2%',position:"absolute", zIndex:2,}}/>
+
             </View>
         )
     }
 }
+
 
 export default Home
