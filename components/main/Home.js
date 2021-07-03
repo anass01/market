@@ -3,61 +3,95 @@ import {Avatar, Button, Searchbar, TextInput} from "react-native-paper";
 import React, {Component} from "react";
 import firebase from "firebase";
 import {Item} from "./CardItem";
-
+require('firebase/firestore');
 
 export class Home extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            DATA:null,
+            isloading:false,
+            searchName:'',
+        }
 
-        this.DATA = [
-                {
-                    id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-                    title: 'First Item',
-                    desc:"good condition 1",
-                    pic:"https://previews.123rf.com/images/vimax001/vimax0011501/vimax001150100008/36083290-image-of-crashed-car-bad-weather-condition.jpg",
-                    price:"500"
-                },
-                {
-                    id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-                    title: 'Second Item',
-                    desc:"good condition 2",
-                    pic:"https://static.carthrottle.com/workspace/uploads/posts/2017/12/67bd95bf13223fb18fe3f20ffccc3667.jpg",
-                    price:"1223"
-                },
-                {
-                    id: '58694a0f-3da1-471f-bd96-145571e29d72',
-                    title: 'Third Item',
-                    desc:"good condition 3",
-                    pic:"https://media.istockphoto.com/photos/car-that-needs-repair-picture-id116032621?k=6&m=116032621&s=612x612&w=0&h=OB_w3G6_A68bKSbD-0htqHhNTsqzY1t7aQO5qAZ2Ykg=",
-                    price:"4984"
-                },
-            ];
+
+        this.loadPosts()
         this.renderItem = this.renderItem.bind(this)
+
     }
 
     renderItem ({ item }) {
-        return(<Item title={item.title} id={item.id} desc={item.desc} pic={item.pic} price={item.price}/>)
+        return(<Item title={item.name} id={item.id} desc={item.desc} pic={item.downloadURL} price={item.price} phone={item.phone}/>)
     }
 
-    render() {
+    findPosts(name){
+        console.log(name.length)
+        if(name.length>3){
+            this.setState({isloading:true})
+            console.log("searching")
+            console.log(name)
+            firebase.firestore()
+                .collectionGroup('userPosts')
+                .where('name', '>=', name)
+                .limit(15)
+                .get()
+                .then((snapshot) => {
+                    let posts = snapshot.docs.map(doc => {
+                        const data = doc.data();
+                        const id = doc.id;
+                        return { id, ...data }
+                    });
+                    console.log(posts)
+                    this.setState({ DATA: posts })
+                    this.setState({isloading:false})
+                }).catch((err) => {console.log(err)})
+        }
+    }
 
+    loadPosts(){
+        this.setState({isloading:true})
+        console.log('loading .... posts')
+        firebase.firestore()
+            .collectionGroup('userPosts')
+            .orderBy("creation", "desc")
+            .limit(15)
+            .get()
+            .then((snapshot) => {
+                let posts = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const id = doc.id;
+                    return { id, ...data }
+                });
+                this.setState({ DATA: posts })
+                this.setState({isloading:false})
+            }).catch((err) => {console.log(err)})
+    }
+    // componentDidMount() {
+    //     console.log('did mount')
+    //     if (this.state.DATA==null){
+    //         this.loadPosts()
+    //     }
+    // }
+    render() {
         return (
             <View style={{ flex: 1, }}>
-
                 <View style={{flex: 1 , height:'100%' ,}}>
                     <FlatList
-                        style={{ paddingTop: '15%', zIndex:-1}}
+                        style={{ paddingTop: '15%', zIndex:-1 ,flex:1}}
                         contentContainerStyle={{paddingBottom:'15%'}}
                         // columnWrapperStyle={{justifyContent: 'space-between'}}
-                        ItemSeparatorComponent={
-                            () => <View style={{ width: '100%', backgroundColor: 'pink' }}/>
-                        }
-                        data={this.DATA}
+                        // ItemSeparatorComponent={
+                        //     () => <View style={{ width: '100%' }}/>
+                        // }
+                        onRefresh={() => this.loadPosts()}
+                        refreshing={this.state.isloading}
+                        data={this.state.DATA}
                         renderItem={this.renderItem}
                         keyExtractor={item => item.id}
                     />
                 </View>
-                <Searchbar style={{margin:'2%',position:"absolute", zIndex:2,}}/>
+                <Searchbar onChangeText={(text) => this.setState({ searchName: text })}
+                           onSubmitEditing={() => this.findPosts(this.state.searchName)} style={{margin:'2%',position:"absolute", zIndex:2,}}/>
 
             </View>
         )

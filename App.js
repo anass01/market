@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { Component } from 'react';
-import { FlatList, StyleSheet, Text, View} from 'react-native';
+import { FlatList, StyleSheet, Text, View, LogBox} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import LandingScreen from './components/auth/Landing'
@@ -10,6 +10,7 @@ import MainScreen from "./components/Main";
 import AddScreen from "./components/main/Add"
 import SaveScreen from './components/main/Save'
 import * as firebase from 'firebase'
+import * as SplashScreen from 'expo-splash-screen';
 
 import { Provider } from 'react-redux'
 import { createStore, applyMiddleware } from 'redux'
@@ -22,7 +23,7 @@ const store = createStore(rootReducer, applyMiddleware(thunk))
 import { apiKey,authDomain,projectId,storageBucket,messagingSenderId,appId } from '@env'
 
 import { Avatar, Button, Card, Title, Paragraph } from 'react-native-paper';
-
+LogBox.ignoreAllLogs();
 const Stack = createStackNavigator();
 const firebaseConfig = {
   apiKey: apiKey,
@@ -62,11 +63,9 @@ export class App extends Component {
   render() {
     const { loggedIn, loaded } = this.state;
     if (!loaded) {
-      return (
-          <View style={{ flex: 1, justifyContent: 'center' }}>
-            <Text>Loading</Text>
-          </View>
-      )
+        SplashScreen.preventAutoHideAsync().then((dd) =>console.log('loading'))
+    }else{
+        SplashScreen.hideAsync().then((dd) =>console.log('loaded'))
     }
   if (!loggedIn) {
     return (
@@ -87,7 +86,7 @@ export class App extends Component {
                 <Stack.Navigator initialRouteName="Home">
                     <Stack.Screen name="Home" component={MainScreen} options={{ headerShown: false }}/>
                     <Stack.Screen name="Add" component={AddScreen} options={{ headerShown: true }} navigation={this.props.navigation}/>
-                    <Stack.Screen name="Save" component={SaveScreen} navigation={this.props.navigation}/>
+                    <Stack.Screen name="Save" component={SaveScreen} options={{ headerShown: false }} navigation={this.props.navigation}/>
                 </Stack.Navigator>
             </NavigationContainer>
         </Provider>

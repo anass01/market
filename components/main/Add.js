@@ -14,12 +14,14 @@
 // }
 //
 // export default Add
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Button, Image } from 'react-native';
+import React, {useState, useEffect, useLayoutEffect} from 'react';
+import {StyleSheet, Text, View, Button, Image, TouchableOpacity, Alert} from 'react-native';
 import { Camera } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import ImageResizer from 'react-native-image-resizer';
-
+import * as ImageManipulator from 'expo-image-manipulator';
+import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function Add({ navigation }) {
     const [hasGalleryPermission, setHasGalleryPermission] = useState(null);
@@ -36,14 +38,21 @@ export default function Add({ navigation }) {
             const galleryStatus = await ImagePicker.requestCameraRollPermissionsAsync();
             setHasGalleryPermission(galleryStatus.status === 'granted');
 
-
         })();
     }, []);
+    useEffect(()=> console.log(image),[image]);
 
     const takePicture = async () => {
         if (camera) {
             const data = await camera.takePictureAsync(null);
-            setImage(data.uri);
+            const manipResult = await ImageManipulator.manipulateAsync(
+                data.uri,
+                [{ resize:{ width:1080, height:1080 }}],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            console.log('resizing')
+            console.log(manipResult.uri);
+            setImage(manipResult.uri);
         }
     }
 
@@ -57,10 +66,16 @@ export default function Add({ navigation }) {
         console.log(result);
 
         if (!result.cancelled) {
-            setImage(result.uri);
+            const manipResult = await ImageManipulator.manipulateAsync(
+                result.uri,
+                [{ resize:{ width:1080, height:1080 }}],
+                { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+            );
+            console.log('resized')
+            console.log(manipResult.uri)
+            setImage(manipResult.uri);
         }
     };
-
 
     if (hasCameraPermission === null || hasGalleryPermission === false) {
         return <View />;
@@ -68,30 +83,43 @@ export default function Add({ navigation }) {
     if (hasCameraPermission === false || hasGalleryPermission === false) {
         return <Text>No access to camera</Text>;
     }
+    const delImage = function(){
+        if(image!=null){
+            console.log('removing image')
+            setImage(null);
+        }
+    }
     return (
         <View style={{ flex: 1 }}>
             <View style={styles.cameraContainer}>
-                <Camera
+                {image ? <Image source={{ uri: image }} style={{ flex: 1 }} />
+                    : <Camera
                     ref={ref => setCamera(ref)}
                     style={styles.fixedRatio}
                     type={type}
-                    ratio={'1:1'} />
+                    ratio={'1:1'} />}
+
             </View>
 
-            <Button
-                title="Flip Image"
-                onPress={() => {
+            <View style={{flexDirection: 'row', justifyContent: 'space-between',alignItems: 'center',paddingHorizontal:"10%"}}>
+
+                <TouchableOpacity onPress={() => {
                     setType(
                         type === Camera.Constants.Type.back
                             ? Camera.Constants.Type.front
                             : Camera.Constants.Type.back
                     );
                 }}>
-            </Button>
-            <Button title="Take Picture" onPress={() => takePicture()} />
-            <Button title="Pick Image From Gallery" onPress={() => pickImage()} />
-            <Button title="Save" onPress={() => navigation.navigate('Save', { image })} />
-            {image && <Image source={{ uri: image }} style={{ flex: 1 }} />}
+                <MaterialIcons name="flip-camera-ios" size={50} color="black" /></TouchableOpacity>
+                {image ?
+                    <TouchableOpacity onPress={() => delImage()} ><Ionicons name="ios-close-circle" size={120} color="black" /></TouchableOpacity>
+                    : <TouchableOpacity onPress={() => takePicture()} ><FontAwesome name="circle" size={120} color="black" /></TouchableOpacity>}
+                {image ?
+                    <TouchableOpacity onPress={() => navigation.navigate('Save', { image ,navigation })} ><Ionicons name="checkmark-circle" size={50} color="black" /></TouchableOpacity>
+                    : <TouchableOpacity onPress={() => pickImage()}><MaterialIcons name="photo-album" size={50} color="black" /></TouchableOpacity>}
+
+            </View>
+
         </View>
     );
 }
@@ -99,7 +127,8 @@ export default function Add({ navigation }) {
 const styles = StyleSheet.create({
     cameraContainer: {
         flex: 1,
-        flexDirection: 'row'
+        width:"100%",
+        aspectRatio: 1/1
     },
     fixedRatio: {
         flex: 1,
