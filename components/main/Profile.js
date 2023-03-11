@@ -31,7 +31,6 @@ export class Profile extends Component{
             .delete()
             .then(this.props.fetchUserPosts())
             .catch((err) => {console.log(err)})
-
     }
     render() {
 
